@@ -12,6 +12,8 @@
             <MultiDBQ:SqlConnectionStringBuilder Grid.Row="0"
                                                  x:Name="cnn"
                                                  ConnectionString="{Binding ElementName=_this, Path=Test}" />
+
+            <MultiDBQ:ScriptSelection Grid.Row="1"/>
         </StackPanel>
 
         <ScrollViewer DockPanel.Dock="Bottom,Right"

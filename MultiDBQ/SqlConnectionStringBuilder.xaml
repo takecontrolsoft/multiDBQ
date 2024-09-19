@@ -67,6 +67,7 @@
                 <Button Grid.Column="7"
                         Grid.Row="0"
                         Content="Connect"
+                        Width="100"
                         Click="Button_Click" />
             </Grid>
         </GroupBox>

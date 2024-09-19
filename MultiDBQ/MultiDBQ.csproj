@@ -81,6 +81,9 @@
       <DependentUpon>LoadingCircle.xaml</DependentUpon>
     </Compile>
     <Compile Include="SmoTasks.cs" />
+    <Compile Include="ScriptSelection.xaml.cs">
+      <DependentUpon>ScriptSelection.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SqlConnectionStringBuilder.xaml.cs">
       <DependentUpon>SqlConnectionStringBuilder.xaml</DependentUpon>
     </Compile>
@@ -101,6 +104,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="ScriptSelection.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="SqlConnectionStringBuilder.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
