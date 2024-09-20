@@ -17,6 +17,7 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -34,7 +35,13 @@
                      Margin="3"
                      Width="Auto"
                      Text="{Binding ElementName=_this, Path=ScriptName, UpdateSourceTrigger=PropertyChanged}" />
-            <Button Grid.Column="2"
+            <MultiDBQ:LoadingCircle Grid.Column="2"
+                                    Grid.Row="0"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Visibility="{Binding ElementName=_this, Path=DatabasesLoading, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+            <Button Grid.Column="3"
                     Grid.Row="0"
                     HorizontalAlignment="Right"
                     x:Name="btnExecute"
@@ -44,7 +51,7 @@
             <TextBox MinLines="100"
                      Grid.Column="0"
                      Grid.Row="1"
-                     Grid.ColumnSpan="3"
+                     Grid.ColumnSpan="4"
                      AcceptsReturn="True"
                      AcceptsTab="True"
                      Height="Auto"

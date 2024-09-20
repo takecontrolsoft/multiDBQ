@@ -111,47 +111,39 @@ namespace MultiDBQ
             }
         }
 
+        public bool DatabasesLoading
+        {
+            get
+            {
+                return _dbLoader.IsBusy;
+            }
+        }
+        private readonly BackgroundWorker _dbLoader = new BackgroundWorker();
+
         public ScriptSelection()
         {
             InitializeComponent();
+            _dbLoader.DoWork += DbLoaderDoWork;
+            _dbLoader.RunWorkerCompleted += DbLoaderRunWorkerCompleted;
+
         }
 
-
-        private void OnPropertyChanged(params string[] propertyNames)
+        void DbLoaderDoWork(object sender, DoWorkEventArgs e)
         {
-            if (PropertyChanged == null) return;
-
-            foreach (var propertyName in propertyNames)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
-
-        private void btnExecute_Click(object sender, RoutedEventArgs e)
-        {
-            if (!ConnectionString.IsValid())
-            {
-                MessageBox.Show("Please set sql server name and credentials");
-                return;
-            }
-            if (Query == null || Query.Trim().Length == 0)
-            {
-                MessageBox.Show("No query selected");
-                return;
-            }
-
+            var loadedTable = (e.Argument as object[])[0] as DataTable;
+            var connectionString = (e.Argument as object[])[1] as SqlConnectionString;
+            var query = (e.Argument as object[])[2] as string;
             DataTable dt = new DataTable();
             string colDatabaseName = "Database";
-
-            foreach (DataRow database in DatabaseItems.Table.Rows)
+            foreach (DataRow database in loadedTable.Rows)
             {
 
                 try
                 {
-                    using (var conn = new SqlConnection(ConnectionString.WithDatabase(database[colDatabaseName].ToString())))
+                    using (var conn = new SqlConnection(connectionString.WithDatabase(database[colDatabaseName].ToString())))
                     {
                         conn.Open();
-                        SqlCommand myTableCommand = new SqlCommand(Query, conn);
+                        SqlCommand myTableCommand = new SqlCommand(query, conn);
                         SqlDataAdapter a = new SqlDataAdapter(myTableCommand);
                         DataTable currentDt = new DataTable();
                         a.Fill(currentDt);
@@ -178,10 +170,58 @@ namespace MultiDBQ
                 }
                 catch (Exception ex)
                 {
+                    if (ex is SqlException && ex.Message.StartsWith("Incorrect syntax"))
+                    {
+                        throw;
+                    }
+
                     AddNewDatabase(dt, colDatabaseName, database);
                 }
             }
-            DataView = dt.DefaultView;
+            e.Result = dt;
+        }
+
+        void DbLoaderRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Error == null)
+            {
+                var dt = e.Result as DataTable;
+                if (dt == null) return;
+
+
+                DataView = dt.DefaultView;
+                OnPropertyChanged(nameof(DatabasesLoading));
+            }
+            else
+            {
+                OnPropertyChanged(nameof(DatabasesLoading));
+                MessageBox.Show(e.Error.Message);
+            }
+        }
+        private void OnPropertyChanged(params string[] propertyNames)
+        {
+            if (PropertyChanged == null) return;
+
+            foreach (var propertyName in propertyNames)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+        private void btnExecute_Click(object sender, RoutedEventArgs e)
+        {
+            if (!ConnectionString.IsValid())
+            {
+                MessageBox.Show("Please set sql server name and credentials");
+                return;
+            }
+            if (Query == null || Query.Trim().Length == 0)
+            {
+                MessageBox.Show("No query selected");
+                return;
+            }
+            _dbLoader.RunWorkerAsync(new object[] { DatabaseItems.Table, ConnectionString, Query });
+            OnPropertyChanged(nameof(DatabasesLoading));
         }
 
         private static void AddNewDatabase(DataTable dt, string colDatabaseName, DataRow database)

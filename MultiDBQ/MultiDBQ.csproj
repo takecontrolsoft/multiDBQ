@@ -138,9 +138,16 @@
     <Resource Include="multiDBQ.ico" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Scripts\Calendar.sql" />
     <Content Include="Scripts\DefaultView.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Scripts\Generete DUK v3.sql" />
+    <Content Include="Scripts\Generete SOL LICHEN TRUD v3.sql" />
+    <Content Include="Scripts\Generete SOL TRUDOVI DOGOWORI v3.sql" />
+    <Content Include="Scripts\Generete SOL v3.sql" />
+    <Content Include="Scripts\GetAutomationByName.sql" />
+    <Content Include="Scripts\GetAutomations.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
