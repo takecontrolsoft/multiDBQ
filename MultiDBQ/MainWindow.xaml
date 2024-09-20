@@ -15,6 +15,22 @@
                 </Style>
             </Style.Resources>
         </Style>
+        <Style TargetType="{x:Type TextBox}">
+            <Style.Resources>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius"
+                            Value="5" />
+                </Style>
+            </Style.Resources>
+        </Style>
+        <Style TargetType="{x:Type PasswordBox}">
+            <Style.Resources>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius"
+                            Value="5" />
+                </Style>
+            </Style.Resources>
+        </Style>
 
     </Window.Resources>
     <DockPanel LastChildFill="True"

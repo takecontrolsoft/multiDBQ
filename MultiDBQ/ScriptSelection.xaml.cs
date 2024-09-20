@@ -10,7 +10,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
 using System.IO;
-using Microsoft.SqlServer.Management.Smo;
 
 namespace MultiDBQ
 {

@@ -2,23 +2,12 @@
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using Microsoft.SqlServer.Management.Common;
-using Microsoft.SqlServer.Management.Smo;
 
 namespace MultiDBQ
 {
     public class SmoTasks : ISmoTasks
     {
-        public IEnumerable<string> SqlServers
-        {
-            get
-            {
-                return SmoApplication
-                    .EnumAvailableSqlServers()
-                    .AsEnumerable()
-                    .Select(r => r["Name"].ToString());
-            }
-        }
+  
 
         public List<string> GetDatabases(SqlConnectionString connectionString)
         {
@@ -27,33 +16,18 @@ namespace MultiDBQ
             using (var conn = new SqlConnection(connectionString.WithDatabase("master")))
             {
                 conn.Open();
-                var serverConnection = new ServerConnection(conn);
-                var server = new Server(serverConnection);
-                databases.AddRange(from Database database in server.Databases select database.Name);
+                SqlCommand command = new SqlCommand("SELECT name FROM MASTER.sys.sysdatabases", conn);
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        databases.Add(reader.GetString(0));
+                    }
+                }
             }
 
             return databases;
         }
 
-        public List<DatabaseTable> GetTables(SqlConnectionString connectionString)
-        {
-            using (var conn = new SqlConnection(connectionString.WithDatabase("master")))
-            {
-                conn.Open();
-                var serverConnection = new ServerConnection(conn);
-                var server = new Server(serverConnection);
-                return 
-                    server
-                    .Databases[connectionString.Database]
-                    .Tables
-                    .Cast<Table>()
-                    .Select(t => new DatabaseTable
-                                     {
-                                         Name = t.Name,
-                                         RowCount = t.RowCount
-                                     })
-                    .ToList();
-            }
-        }
     }
 }

@@ -1,6 +1,4 @@
-﻿using Microsoft.SqlServer.Management.Common;
-using Microsoft.SqlServer.Management.Smo;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -127,37 +125,6 @@ namespace MultiDBQ
             GetBindingExpression(ConnectionStringProperty).UpdateSource();
         }
 
-        public ObservableCollection<string> Servers
-        {
-            get
-            {
-                lock (ServersLock)
-                {
-                    if (_servers == null)
-                    {
-                        _servers = new ObservableCollection<string>();
-                        ServersLoading = true;
-                        LoadServersAsync();
-                    }
-                }
-
-                return _servers;
-            }
-        }
-
-        public bool ServersLoading
-        {
-            get
-            {
-                return _serversLoading;
-            }
-            private set
-            {
-                _serversLoading = value;
-                OnPropertyChanged("ServersLoading");
-            }
-        }
-
         public bool DatabasesLoading
         {
             get
@@ -226,23 +193,6 @@ namespace MultiDBQ
             }
 
             OnPropertyChanged("DatabasesLoading");
-        }
-
-        private void LoadServersAsync()
-        {
-            var serverLoader = new BackgroundWorker();
-            serverLoader.DoWork += ((sender, e) => e.Result = _smoTasks.SqlServers.OrderBy(r => r).ToArray());
-
-            serverLoader.RunWorkerCompleted += ((sender, e) =>
-            {
-                foreach (var server in (string[])e.Result)
-                {
-                    _servers.Add(server);
-                }
-                ServersLoading = false;
-            });
-
-            serverLoader.RunWorkerAsync();
         }
 
         void PasswordChangedHandler(Object sender, RoutedEventArgs args)
