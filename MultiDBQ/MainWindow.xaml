@@ -34,7 +34,7 @@
 
     </Window.Resources>
     <DockPanel LastChildFill="True"
-               VerticalAlignment="Top">
+               VerticalAlignment="Stretch">
         <MultiDBQ:SqlConnectionStringBuilder x:Name="cnn"
                                              DockPanel.Dock="Top"
                                              ConnectionString="{Binding ElementName=_this, Path=Test}" />
@@ -43,22 +43,21 @@
                 <ColumnDefinition Width="50*" />
                 <ColumnDefinition Width="50*" />
             </Grid.ColumnDefinitions>
+            <MultiDBQ:ScriptSelection Grid.Column="0"
+                                      ConnectionString="{Binding ElementName=cnn, Path=ConnectionString}"
+                                      DataView="{Binding ElementName=cnn, Path=DataView, Mode=TwoWay}"
+                                      DatabaseItems="{Binding ElementName=cnn, Path=DatabaseItems}" />
             <GroupBox  Grid.Row="0"
-                       Grid.Column="0"
+                       Grid.Column="1"
                        FontSize="14"
                        FontWeight="Bold"
                        Header="Databases">
                 <DataGrid x:Name="resourcesGrid"
-                          ItemsSource="{Binding ElementName=cnn, Path=DatabaseItems, Mode=OneWay}"
-                          AutoGenerateColumns="True">
-                    <DataGrid.Columns>
-                        <DataGridCheckBoxColumn x:Name="resourceCheck" />
-                    </DataGrid.Columns>
-                </DataGrid>
+                          SelectionMode="Extended"
+                          ItemsSource="{Binding ElementName=cnn, Path=DataView, Mode=OneWay}"
+                          AutoGenerateColumns="True" />
+
             </GroupBox>
-            <MultiDBQ:ScriptSelection Grid.Column="1"
-                                      ConnectionString="{Binding ElementName=cnn, Path=ConnectionString, Mode=OneWay}"
-                                      SelectedDatabases="{Binding ElementName=cnn, Path=DatabaseItems, Mode=TwoWay}"/>
         </Grid>
     </DockPanel>
 </Window>

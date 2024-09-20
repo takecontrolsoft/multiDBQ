@@ -24,11 +24,7 @@ namespace MultiDBQ
         public static readonly DependencyProperty DatabaseItemsProperty =
         DependencyProperty.Register("DatabaseItems",
         typeof(DataView),
-        typeof(SqlConnectionStringBuilder),
-                                        new FrameworkPropertyMetadata(
-                                            new DataView(),
-                                            FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
-                                            DatabaseItemsChanged));
+        typeof(SqlConnectionStringBuilder));
 
         public DataView DatabaseItems
         {
@@ -40,6 +36,28 @@ namespace MultiDBQ
             {
                 SetValue(DatabaseItemsProperty, value);
                 OnPropertyChanged(nameof(DatabaseItems));
+            }
+        }
+
+        public static readonly DependencyProperty DataViewProperty =
+       DependencyProperty.Register("DataView",
+       typeof(DataView),
+       typeof(SqlConnectionStringBuilder),
+                                       new FrameworkPropertyMetadata(
+                                           new DataView(),
+                                           FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+                                           DataViewChanged));
+
+        public DataView DataView
+        {
+            get
+            {
+                return (DataView)GetValue(DataViewProperty);
+            }
+            set
+            {
+                SetValue(DataViewProperty, value);
+                OnPropertyChanged(nameof(DataView));
             }
         }
 
@@ -60,10 +78,10 @@ namespace MultiDBQ
                 builder.RegisterNewConnectionString((SqlConnectionString)e.NewValue);
         }
 
-        private static void DatabaseItemsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void DataViewChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var builder = (SqlConnectionStringBuilder)d;
-            builder.DatabaseItems = e.NewValue as DataView;
+            builder.DataView = e.NewValue as DataView;
         }
 
         public SqlConnectionStringBuilder()
@@ -86,7 +104,6 @@ namespace MultiDBQ
         private readonly BackgroundWorker _dbLoader = new BackgroundWorker();
         private string _lastServer;
         private string _header = "Sql Configuration";
-        private bool _serversLoading;
 
         public SqlConnectionStringBuilder(ISmoTasks smoTasks)
         {
@@ -96,6 +113,7 @@ namespace MultiDBQ
             _dbLoader.RunWorkerCompleted += DbLoaderRunWorkerCompleted;
             DataTable dt = new DataTable();
             DatabaseItems = dt.DefaultView;
+            DataView = dt.DefaultView;
         }
 
         public static void SetConnectionString(DependencyObject dp, SqlConnectionString value)
@@ -160,7 +178,6 @@ namespace MultiDBQ
             //No need to refesh databases if last server is the same as current server
             if (connString == null || _lastServer == connString.Server)
                 return;
-
             _lastServer = connString.Server;
 
             if (string.IsNullOrEmpty(connString.Server)) return;
@@ -180,34 +197,45 @@ namespace MultiDBQ
                 foreach (var database in databases.OrderBy(d => d))
                 {
                     DataRow dr = dt.NewRow();
-                    string colName = "Database";
-                    if (!dt.Columns.Contains(colName))
+
+                    string colDatabaseName = "Database";
+                    if (!dt.Columns.Contains(colDatabaseName))
                     {
-                        dt.Columns.Add(colName);
+                        dt.Columns.Add(colDatabaseName);
                     }
-                    dr[colName] = database;
+
+                    dr[colDatabaseName] = database;
                     dt.Rows.Add(dr);
                 }
 
                 DatabaseItems = dt.DefaultView;
+                DataView = dt.DefaultView;
+                OnPropertyChanged(nameof(DatabasesLoading));
+            }
+            else
+            {
+                OnPropertyChanged(nameof(DatabasesLoading));
+                MessageBox.Show(e.Error.Message);
             }
 
-            OnPropertyChanged("DatabasesLoading");
         }
 
         void PasswordChangedHandler(Object sender, RoutedEventArgs args)
         {
-            // Increment a counter each time the event fires.
             ConnectionString.Password = ((PasswordBox)sender).Password;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void btnLoad_Click(object sender, RoutedEventArgs e)
         {
-            if (ConnectionString.IsValid())
+            if (!ConnectionString.IsValid())
             {
-                _dbLoader.RunWorkerAsync(ConnectionString);
+                MessageBox.Show("There is no a valid sql server connection.");
                 return;
             }
+
+            _dbLoader.RunWorkerAsync(ConnectionString);
+            OnPropertyChanged(nameof(DatabasesLoading));
+
         }
     }
 }
