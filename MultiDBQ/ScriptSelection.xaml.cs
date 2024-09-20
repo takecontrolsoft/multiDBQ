@@ -9,6 +9,8 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
+using System.IO;
+using Microsoft.SqlServer.Management.Smo;
 
 namespace MultiDBQ
 {
@@ -19,15 +21,26 @@ namespace MultiDBQ
     public partial class ScriptSelection : INotifyPropertyChanged
     {
         public static readonly DependencyProperty QueryProperty =
-        DependencyProperty.Register("Query",
-        typeof(string),
-        typeof(ScriptSelection));
+            DependencyProperty.Register("Query",
+            typeof(string),
+            typeof(ScriptSelection));
 
-       public static readonly DependencyProperty ScriptNameProperty =
-        DependencyProperty.Register("ScriptName",
-        typeof(string),
-        typeof(ScriptSelection));
+        public static readonly DependencyProperty ScriptNameProperty =
+            DependencyProperty.Register("ScriptName",
+            typeof(string),
+            typeof(ScriptSelection));
 
+        public static readonly DependencyProperty SelectedDatabasesProperty =
+            DependencyProperty.Register("SelectedDatabases",
+            typeof(DataView),
+            typeof(ScriptSelection));
+
+        public static readonly DependencyProperty ConnectionStringProperty =
+            DependencyProperty.Register("ConnectionString",
+            typeof(SqlConnectionString),
+            typeof(ScriptSelection));
+
+        
         public event PropertyChangedEventHandler PropertyChanged;
 
         public string Query
@@ -41,7 +54,7 @@ namespace MultiDBQ
                 SetValue(QueryProperty, value);
             }
         }
-      
+
         public string ScriptName
         {
             get
@@ -54,40 +67,110 @@ namespace MultiDBQ
             }
         }
 
+        public DataView SelectedDatabases
+        {
+            get
+            {
+                return (DataView)GetValue(SelectedDatabasesProperty);
+            }
+            set
+            {
+                SetValue(SelectedDatabasesProperty, value);
+
+                OnPropertyChanged(nameof(SelectedDatabases));
+            }
+        }
+
+        public SqlConnectionString ConnectionString
+        {
+            get
+            {
+                return (SqlConnectionString)GetValue(ConnectionStringProperty);
+            }
+            set
+            {
+                SetValue(ConnectionStringProperty, value);
+            }
+        }
+
         public ScriptSelection()
         {
             InitializeComponent();
         }
 
-      
 
+        private void OnPropertyChanged(params string[] propertyNames)
+        {
+            if (PropertyChanged == null) return;
+
+            foreach (var propertyName in propertyNames)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
         private void btnExecute_Click(object sender, RoutedEventArgs e)
         {
-            //string mySQLQuery = "select * from myTable";
-            //SqlCommand myTableCommand = new SqlCommand(mySQLQuery, MyConnection);
-            //DataTable dt = new DataTable();
-            //SqlDataAdapter a = new SqlDataAdapter(myTableCommand);
-            //a.Fill(dt);
-            //myDataGrid.ItemsSource = dt.DefaultView;
+            if (Query.Trim().Length > 0)
+            {
+                DataTable dt = new DataTable();
 
+                foreach (DataRow database in SelectedDatabases.Table.Rows)
+                {
+
+                    try
+                    {
+                        using (var conn = new SqlConnection(ConnectionString.WithDatabase(database[0].ToString())))
+                        {
+                            conn.Open();
+                            SqlCommand myTableCommand = new SqlCommand(Query, conn);
+                            SqlDataAdapter a = new SqlDataAdapter(myTableCommand);
+                            DataTable currentDt = new DataTable();
+                            a.Fill(currentDt);
+                            foreach (DataColumn column in currentDt.Columns)
+                            {
+                                if (!dt.Columns.Contains(column.ColumnName))
+                                {
+                                    dt.Columns.Add(column.ColumnName);
+                                }
+                            }
+                            foreach (DataRow row in currentDt.Rows)
+                            {
+                                dt.ImportRow(row);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        DataRow dr = dt.NewRow();
+                        if (dt.Columns.Count == 0)
+                        {
+                            dt.Columns.Add("Database");
+                        }
+                        dr["Database"] = database[0].ToString();
+                        dt.Rows.Add(dr);
+                    }
+                }
+                SelectedDatabases = dt.DefaultView;
+            }
         }
 
-        private void btnSelect_Click(object sender, RoutedEventArgs e)
-        {
-            // Configure save file dialog box
-            var dialog = new Microsoft.Win32.OpenFileDialog();
-            dialog.FileName = "Scripts"; // Default file name
-            dialog.DefaultExt = ".sql"; // Default file extension
-            dialog.Filter = "Scripts (.sql)|*.sql"; // Filter files by extension
-
-            // Show save file dialog box
-            bool? result = dialog.ShowDialog();
-
-            // Process save file dialog box results
-            if (result == true)
+            private void btnSelect_Click(object sender, RoutedEventArgs e)
             {
-                ScriptName = dialog.FileName;
+                // Configure save file dialog box
+                var dialog = new Microsoft.Win32.OpenFileDialog();
+                dialog.FileName = "Scripts"; // Default file name
+                dialog.DefaultExt = ".sql"; // Default file extension
+                dialog.Filter = "Scripts (.sql)|*.sql"; // Filter files by extension
+
+                // Show save file dialog box
+                bool? result = dialog.ShowDialog();
+
+                // Process save file dialog box results
+                if (result == true)
+                {
+                    ScriptName = dialog.FileName;
+                    Query = File.ReadAllText(ScriptName);
+                }
             }
         }
     }
-}

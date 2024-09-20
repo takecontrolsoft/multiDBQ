@@ -22,10 +22,16 @@ namespace MultiDBQ
     public partial class SqlConnectionStringBuilder : INotifyPropertyChanged
     {
         private static readonly SqlConnectionString DefaultValue = new SqlConnectionString { IntegratedSecurity = false, Pooling = false };
+
         public static readonly DependencyProperty DatabaseItemsProperty =
         DependencyProperty.Register("DatabaseItems",
         typeof(DataView),
-        typeof(SqlConnectionStringBuilder));
+        typeof(SqlConnectionStringBuilder),
+                                        new FrameworkPropertyMetadata(
+                                            new DataView(),
+                                            FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+                                            DatabaseItemsChanged));
+
         public DataView DatabaseItems
         {
             get
@@ -35,6 +41,7 @@ namespace MultiDBQ
             set
             {
                 SetValue(DatabaseItemsProperty, value);
+                OnPropertyChanged(nameof(DatabaseItems));
             }
         }
 
@@ -53,6 +60,12 @@ namespace MultiDBQ
                 builder.Dispatcher.BeginInvoke((Action)(() => d.SetValue(ConnectionStringProperty, DefaultValue)));
             else
                 builder.RegisterNewConnectionString((SqlConnectionString)e.NewValue);
+        }
+
+        private static void DatabaseItemsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var builder = (SqlConnectionStringBuilder)d;
+            builder.DatabaseItems = e.NewValue as DataView;
         }
 
         public SqlConnectionStringBuilder()
@@ -159,7 +172,7 @@ namespace MultiDBQ
             set
             {
                 _header = value;
-                OnPropertyChanged("Header");
+                OnPropertyChanged(nameof(Header));
             }
         }
 
@@ -195,47 +208,18 @@ namespace MultiDBQ
                 var databases = e.Result as List<string>;
                 if (databases == null) return;
                 _lastServer = null;
-                string defaultViewFile = "Scripts\\DefaultView.sql";
                 DataTable dt = new DataTable();
-               
-                string defaultQuery = "SELECT DB_NAME() as [Database]";
+
                 foreach (var database in databases.OrderBy(d => d))
                 {
-                    if (File.Exists(defaultViewFile))
+                    DataRow dr = dt.NewRow();
+                    string colName = "Database";
+                    if (!dt.Columns.Contains(colName))
                     {
-                        defaultQuery = File.ReadAllText(defaultViewFile);
+                        dt.Columns.Add(colName);
                     }
-                    try
-                    {
-                        using (var conn = new SqlConnection(ConnectionString.WithDatabase(database)))
-                        {
-                            conn.Open();
-                            SqlCommand myTableCommand = new SqlCommand(defaultQuery, conn);
-                            SqlDataAdapter a = new SqlDataAdapter(myTableCommand);
-                            DataTable currentDt = new DataTable();
-                            a.Fill(currentDt);
-                            foreach (DataColumn column in currentDt.Columns)
-                            {
-                                if (!dt.Columns.Contains(column.ColumnName))
-                                {
-                                    dt.Columns.Add(column.ColumnName);
-                                }
-                            }
-                            foreach (DataRow row in currentDt.Rows)
-                            {
-                                dt.ImportRow(row);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        DataRow dr = dt.NewRow();
-                        if (dt.Columns.Count == 0) {
-                            dt.Columns.Add("Database");
-                        }
-                        dr["Database"] = database;
-                        dt.Rows.Add(dr);
-                    }
+                    dr[colName] = database;
+                    dt.Rows.Add(dr);
                 }
 
                 DatabaseItems = dt.DefaultView;

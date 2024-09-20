@@ -16,9 +16,10 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <Button Grid.Column="0"
@@ -32,13 +33,24 @@
                      Margin="3"
                      Width="Auto"
                      Text="{Binding ElementName=_this, Path=ScriptName, UpdateSourceTrigger=PropertyChanged}" />
-
-            <Button Grid.Column="2"
-                    Grid.Row="0"
+            <TextBox MinLines="100"
+                     Grid.Column="0"
+                     Grid.Row="1"
+                     Grid.ColumnSpan="2"
+                     AcceptsReturn="True"
+                     Height="Auto"
+                     Width="Auto"
+                     HorizontalScrollBarVisibility="Visible"
+                     VerticalScrollBarVisibility="Visible"
+                     Text="{Binding ElementName=_this, Path=Query, UpdateSourceTrigger=PropertyChanged}" />
+            <Button Grid.Column="1"
+                    Grid.Row="2"
+                    HorizontalAlignment="Right"
                     x:Name="btnExecute"
                     Content="Execute"
                     Width="100"
                     Click="btnExecute_Click" />
+
         </Grid>
     </GroupBox>
 </UserControl>
