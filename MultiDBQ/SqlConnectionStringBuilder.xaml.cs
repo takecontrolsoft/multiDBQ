@@ -1,7 +1,13 @@
-﻿using System;
+﻿using Microsoft.SqlServer.Management.Common;
+using Microsoft.SqlServer.Management.Smo;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data;
+using System.Data.SqlClient;
+using System.Diagnostics.Eventing.Reader;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,13 +24,13 @@ namespace MultiDBQ
         private static readonly SqlConnectionString DefaultValue = new SqlConnectionString { IntegratedSecurity = false, Pooling = false };
         public static readonly DependencyProperty DatabaseItemsProperty =
         DependencyProperty.Register("DatabaseItems",
-        typeof(ObservableCollection<string>),
+        typeof(DataView),
         typeof(SqlConnectionStringBuilder));
-        public ObservableCollection<string> DatabaseItems
+        public DataView DatabaseItems
         {
             get
             {
-                return (ObservableCollection<string>)GetValue(DatabaseItemsProperty);
+                return (DataView)GetValue(DatabaseItemsProperty);
             }
             set
             {
@@ -65,7 +71,6 @@ namespace MultiDBQ
         private static ObservableCollection<string> _servers;
         private static readonly object ServersLock = new object();
 
-        private readonly ObservableCollection<string> _databases = new ObservableCollection<string>();
         public event PropertyChangedEventHandler PropertyChanged;
         private readonly BackgroundWorker _dbLoader = new BackgroundWorker();
         private string _lastServer;
@@ -78,7 +83,8 @@ namespace MultiDBQ
 
             _dbLoader.DoWork += DbLoaderDoWork;
             _dbLoader.RunWorkerCompleted += DbLoaderRunWorkerCompleted;
-            DatabaseItems = _databases;
+            DataTable dt = new DataTable();
+            DatabaseItems = dt.DefaultView;
         }
 
         public static void SetConnectionString(DependencyObject dp, SqlConnectionString value)
@@ -124,11 +130,6 @@ namespace MultiDBQ
 
                 return _servers;
             }
-        }
-
-        public ObservableCollection<string> Databases
-        {
-            get { return _databases; }
         }
 
         public bool ServersLoading
@@ -193,12 +194,51 @@ namespace MultiDBQ
             {
                 var databases = e.Result as List<string>;
                 if (databases == null) return;
-
                 _lastServer = null;
+                string defaultViewFile = "Scripts\\DefaultView.sql";
+                DataTable dt = new DataTable();
+               
+                string defaultQuery = "SELECT DB_NAME() as [Database]";
                 foreach (var database in databases.OrderBy(d => d))
                 {
-                    _databases.Add(database);
+                    if (File.Exists(defaultViewFile))
+                    {
+                        defaultQuery = File.ReadAllText(defaultViewFile);
+                    }
+                    try
+                    {
+                        using (var conn = new SqlConnection(ConnectionString.WithDatabase(database)))
+                        {
+                            conn.Open();
+                            SqlCommand myTableCommand = new SqlCommand(defaultQuery, conn);
+                            SqlDataAdapter a = new SqlDataAdapter(myTableCommand);
+                            DataTable currentDt = new DataTable();
+                            a.Fill(currentDt);
+                            foreach (DataColumn column in currentDt.Columns)
+                            {
+                                if (!dt.Columns.Contains(column.ColumnName))
+                                {
+                                    dt.Columns.Add(column.ColumnName);
+                                }
+                            }
+                            foreach (DataRow row in currentDt.Rows)
+                            {
+                                dt.ImportRow(row);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        DataRow dr = dt.NewRow();
+                        if (dt.Columns.Count == 0) {
+                            dt.Columns.Add("Database");
+                        }
+                        dr["Database"] = database;
+                        dt.Rows.Add(dr);
+                    }
                 }
+
+                DatabaseItems = dt.DefaultView;
             }
 
             OnPropertyChanged("DatabasesLoading");
