@@ -1,14 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
 
 namespace MultiDBQ
 {
     public class SmoTasks : ISmoTasks
     {
   
-
         public List<string> GetDatabases(SqlConnectionString connectionString)
         {
             var databases = new List<string>();

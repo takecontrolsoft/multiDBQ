@@ -1,24 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Data.Common;
-using System.Data.SqlClient;
 using System.Data;
-using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Markup;
+using System.Data.SqlClient;
 using System.IO;
+using System.Windows;
+using System.Windows.Markup;
 
 namespace MultiDBQ
 {
-    /// <summary>
-    /// Interaction logic for ScriptSelection.xaml
-    /// </summary>
     [ContentProperty("Query")]
     public partial class ScriptSelection : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+        private readonly BackgroundWorker _dbLoader = new BackgroundWorker();
+        
         public static readonly DependencyProperty QueryProperty =
             DependencyProperty.Register("Query",
             typeof(string),
@@ -43,10 +38,7 @@ namespace MultiDBQ
             DependencyProperty.Register("ConnectionString",
             typeof(SqlConnectionString),
             typeof(ScriptSelection));
-
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
+        
         public string Query
         {
             get
@@ -118,8 +110,7 @@ namespace MultiDBQ
                 return _dbLoader.IsBusy;
             }
         }
-        private readonly BackgroundWorker _dbLoader = new BackgroundWorker();
-
+      
         public ScriptSelection()
         {
             InitializeComponent();

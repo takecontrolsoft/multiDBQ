@@ -3,19 +3,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
-using System.Data.SqlClient;
-using System.Diagnostics.Eventing.Reader;
-using System.IO;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Markup;
 
 namespace MultiDBQ
 {
-    /// <summary>
-    /// Interaction logic for SqlConnectionStringBuilder.xaml
-    /// </summary>
     [ContentProperty("Footer")]
     public partial class SqlConnectionStringBuilder : INotifyPropertyChanged
     {
@@ -133,7 +126,6 @@ namespace MultiDBQ
 
         void ConnectionStringPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            //Server has changed, reload
             if (e.PropertyName == "Server" && !_dbLoader.IsBusy)
             {
                 OnPropertyChanged("DatabasesLoading");
