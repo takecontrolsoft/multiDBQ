@@ -135,6 +135,10 @@ namespace MultiDBQ
             var query = (e.Argument as object[])[2] as string;
             DataTable dt = new DataTable();
             string colDatabaseName = "Database";
+            if (!dt.Columns.Contains(colDatabaseName))
+            {
+                dt.Columns.Add(colDatabaseName);
+            }
             foreach (DataRow database in loadedTable.Rows)
             {
 
@@ -156,8 +160,13 @@ namespace MultiDBQ
                         }
                         if (currentDt.Rows.Count > 0)
                         {
+                            if (!currentDt.Columns.Contains(colDatabaseName))
+                            {
+                                currentDt.Columns.Add(colDatabaseName);
+                            }
                             foreach (DataRow row in currentDt.Rows)
                             {
+                                row[colDatabaseName] = database[colDatabaseName].ToString();
                                 dt.ImportRow(row);
                             }
                         }
@@ -228,6 +237,13 @@ namespace MultiDBQ
         {
             DataRow dr = dt.NewRow();
 
+            AddDatabase(dt, colDatabaseName, database, dr);
+
+            dt.Rows.Add(dr);
+        }
+
+        private static void AddDatabase(DataTable dt, string colDatabaseName, DataRow database, DataRow dr)
+        {
             if (!dt.Columns.Contains(colDatabaseName))
             {
                 dt.Columns.Add(colDatabaseName);
@@ -237,22 +253,17 @@ namespace MultiDBQ
             {
                 dr[colDatabaseName] = database[colDatabaseName].ToString();
             }
-
-            dt.Rows.Add(dr);
         }
 
         private void btnSelect_Click(object sender, RoutedEventArgs e)
         {
-            // Configure save file dialog box
             var dialog = new Microsoft.Win32.OpenFileDialog();
-            dialog.FileName = "Scripts"; // Default file name
-            dialog.DefaultExt = ".sql"; // Default file extension
-            dialog.Filter = "Scripts (.sql)|*.sql"; // Filter files by extension
+            dialog.FileName = "Scripts";
+            dialog.DefaultExt = ".sql";
+            dialog.Filter = "Scripts (.sql)|*.sql";
 
-            // Show save file dialog box
             bool? result = dialog.ShowDialog();
 
-            // Process save file dialog box results
             if (result == true)
             {
                 ScriptName = dialog.FileName;
@@ -262,6 +273,20 @@ namespace MultiDBQ
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
+            if (String.IsNullOrWhiteSpace(ScriptName))
+            {
+                var dialog = new Microsoft.Win32.SaveFileDialog();
+                dialog.FileName = "Script";
+                dialog.DefaultExt = ".sql";
+                dialog.Filter = "Scripts (.sql)|*.sql";
+
+                bool? result = dialog.ShowDialog();
+
+                if (result == true)
+                {
+                    ScriptName = dialog.FileName;
+                }
+            }
             if (!String.IsNullOrWhiteSpace(ScriptName) && !String.IsNullOrWhiteSpace(Query))
             {
                 File.WriteAllText(ScriptName, Query);
