@@ -27,7 +27,7 @@ Executing a same query on multiple databases with same structure.
 * You can save the query using the button `Save` to a new file chosen from the save file dialog.
 
 ## Compatibility
-Windows Platforms, architectures: x86 and x64, arm64
-MS SQL server
+* Windows Platforms, architectures: x86 and x64, arm64
+* MS SQL server
 
 
