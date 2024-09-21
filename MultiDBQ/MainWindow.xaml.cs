@@ -26,5 +26,6 @@ namespace MultiDBQ
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
     }
 }

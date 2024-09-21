@@ -102,7 +102,6 @@ namespace MultiDBQ
 
         public event PropertyChangedEventHandler PropertyChanged;
         private readonly BackgroundWorker _dbLoader = new BackgroundWorker();
-        private string _lastServer;
         private string _header = "Sql Configuration";
 
         public SqlConnectionStringBuilder(ISmoTasks smoTasks)
@@ -175,11 +174,6 @@ namespace MultiDBQ
         {
             var connString = e.Argument as SqlConnectionString;
 
-            //No need to refesh databases if last server is the same as current server
-            if (connString == null || _lastServer == connString.Server)
-                return;
-            _lastServer = connString.Server;
-
             if (string.IsNullOrEmpty(connString.Server)) return;
 
             e.Result = _smoTasks.GetDatabases(connString);
@@ -191,7 +185,6 @@ namespace MultiDBQ
             {
                 var databases = e.Result as List<string>;
                 if (databases == null) return;
-                _lastServer = null;
                 DataTable dt = new DataTable();
 
                 foreach (var database in databases.OrderBy(d => d))
@@ -222,7 +215,7 @@ namespace MultiDBQ
 
         void PasswordChangedHandler(Object sender, RoutedEventArgs args)
         {
-            ConnectionString.Password = ((PasswordBox)sender).Password;
+            ConnectionString.Password = ((Wpf.Ui.Controls.PasswordBox)sender).Password;
         }
 
         private void btnLoad_Click(object sender, RoutedEventArgs e)
@@ -232,9 +225,11 @@ namespace MultiDBQ
                 MessageBox.Show("There is no a valid sql server connection.");
                 return;
             }
-
-            _dbLoader.RunWorkerAsync(ConnectionString);
-            OnPropertyChanged(nameof(DatabasesLoading));
+            if (!_dbLoader.IsBusy)
+            {
+                _dbLoader.RunWorkerAsync(ConnectionString);
+                OnPropertyChanged(nameof(DatabasesLoading));
+            }
 
         }
     }

@@ -262,7 +262,10 @@ namespace MultiDBQ
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
-            File.WriteAllText(ScriptName, Query);
+            if (!String.IsNullOrWhiteSpace(ScriptName) && !String.IsNullOrWhiteSpace(Query))
+            {
+                File.WriteAllText(ScriptName, Query);
+            }
         }
     }
 }

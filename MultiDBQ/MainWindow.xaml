@@ -2,37 +2,13 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:MultiDBQ="clr-namespace:MultiDBQ"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         Title="MultiDBQ"
-        Height="350"
-        Width="525"
+        Height="600"
+        Width="800"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
         x:Name="_this">
-    <Window.Resources>
-        <Style TargetType="{x:Type Button}">
-            <Style.Resources>
-                <Style TargetType="Border">
-                    <Setter Property="CornerRadius"
-                            Value="5" />
-                </Style>
-            </Style.Resources>
-        </Style>
-        <Style TargetType="{x:Type TextBox}">
-            <Style.Resources>
-                <Style TargetType="Border">
-                    <Setter Property="CornerRadius"
-                            Value="5" />
-                </Style>
-            </Style.Resources>
-        </Style>
-        <Style TargetType="{x:Type PasswordBox}">
-            <Style.Resources>
-                <Style TargetType="Border">
-                    <Setter Property="CornerRadius"
-                            Value="5" />
-                </Style>
-            </Style.Resources>
-        </Style>
-
-    </Window.Resources>
     <DockPanel LastChildFill="True"
                VerticalAlignment="Stretch">
         <MultiDBQ:SqlConnectionStringBuilder x:Name="cnn"
@@ -48,14 +24,32 @@
                                       DataView="{Binding ElementName=cnn, Path=DataView, Mode=TwoWay}"
                                       DatabaseItems="{Binding ElementName=cnn, Path=DatabaseItems}" />
             <GroupBox  Grid.Row="0"
-                       Grid.Column="1"
-                       FontSize="14"
-                       FontWeight="Bold"
-                       Header="Databases">
-                <DataGrid x:Name="resourcesGrid"
-                          SelectionMode="Extended"
-                          ItemsSource="{Binding ElementName=cnn, Path=DataView, Mode=OneWay}"
-                          AutoGenerateColumns="True" />
+                       Grid.Column="1">
+                <GroupBox.Header>
+                    <ui:TextBlock Text="Result"
+                                  FontSize="14"
+                                  FontWeight="Bold" />
+                </GroupBox.Header>
+
+                <ui:DataGrid      SelectionMode="Extended"
+                                  CanUserSortColumns="True"
+                                  ItemsSource="{Binding ElementName=cnn, Path=DataView, Mode=OneWay}"
+                                  AutoGenerateColumns="True"
+                                  IsReadOnly="True"
+                                  CanUserAddRows="False">
+                    <DataGrid.Resources>
+                        <Style BasedOn="{StaticResource {x:Type DataGridColumnHeader}}"
+                               TargetType="{x:Type DataGridColumnHeader}">
+                            <Setter Property="Foreground"
+                                    Value="DodgerBlue" />
+                            <Setter Property="Height"
+                                    Value="28" />
+                            <Setter Property="Width"
+                                    Value="auto" />
+                        </Style>
+                    </DataGrid.Resources>
+                </ui:DataGrid>
+
 
             </GroupBox>
         </Grid>

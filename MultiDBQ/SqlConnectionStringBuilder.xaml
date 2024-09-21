@@ -2,6 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:MultiDBQ="clr-namespace:MultiDBQ"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              x:Name="_this">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
@@ -27,34 +28,35 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <TextBlock Text="Server: "
+            <ui:TextBlock Text="Server: "
                            VerticalAlignment="Center"
                            Margin="3"
                            Grid.Column="0"
                            Grid.Row="0" />
 
-            <TextBox  Grid.Column="1"
+            <ui:TextBox  Grid.Column="1"
                            Grid.Row="0"
                            Margin="3"
                            x:Name="SqlServerName"
                            Text="{Binding ElementName=_this, Path=ConnectionString.Server, UpdateSourceTrigger=LostFocus}" />
-            <TextBlock Text="Username: "
+            <ui:TextBlock Text="Username: "
                            Grid.Column="2"
                            Grid.Row="0"
                            Margin="3"
                            VerticalAlignment="Center" />
-            <TextBox Grid.Column="3"
+            <ui:TextBox Grid.Column="3"
                          Grid.Row="0"
                          Margin="3"
                          Text="{Binding ElementName=_this, Path=ConnectionString.UserName, UpdateSourceTrigger=PropertyChanged}" />
-            <TextBlock Text="Password: "
+            <ui:TextBlock Text="Password: "
                         Grid.Column="4"
                         Grid.Row="0"
                         Margin="3"
                         VerticalAlignment="Center" />
-            <PasswordBox Grid.Column="5"
+            <ui:PasswordBox Grid.Column="5"
                         Grid.Row="0"
                         Margin="3"
+                        Icon="Password24"
                         PasswordChanged="PasswordChangedHandler" />
              <MultiDBQ:LoadingCircle 
                         Grid.Column="6"
@@ -62,9 +64,11 @@
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         Visibility="{Binding ElementName=_this, Path=DatabasesLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-             <Button Grid.Column="7"
+             <ui:Button Grid.Column="7"
                         Grid.Row="0"
                         Content="Load"
+                        Appearance="Primary"
+                        Icon="{ui:SymbolIcon Symbol=Database24}"
                         Click="btnLoad_Click" />
                  </Grid>
     </GroupBox>
